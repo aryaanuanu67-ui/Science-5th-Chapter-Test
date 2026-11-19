@@ -1,0 +1,428 @@
+<title>Science Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one narrow column, one screen at a time (setup -> question -> result) */
+:root {
+  --bg: #f3f6f4;
+  --surface: #ffffff;
+  --fg: #14231c;
+  --muted: #5b6b63;
+  --line: #d5dfd9;
+  --accent: #0f7b5f;
+  --accent-fg: #ffffff;
+  --accent-soft: #dff3ec;
+  --good: #14804a;
+  --good-soft: #ddf3e6;
+  --bad: #b3261e;
+  --bad-soft: #fbe3e0;
+  --warn: #b25e00;
+  --font-body: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1a15; --surface: #16251e; --fg: #e8f1ec; --muted: #93a79c; --line: #284034;
+    --accent: #3fc79f; --accent-fg: #06251b; --accent-soft: #17382d;
+    --good: #5fd391; --good-soft: #163a27; --bad: #ff8a80; --bad-soft: #43201d; --warn: #f0a24a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1a15; --surface: #16251e; --fg: #e8f1ec; --muted: #93a79c; --line: #284034;
+  --accent: #3fc79f; --accent-fg: #06251b; --accent-soft: #17382d;
+  --good: #5fd391; --good-soft: #163a27; --bad: #ff8a80; --bad-soft: #43201d; --warn: #f0a24a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 1.6rem; line-height: 1.2; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.15rem; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+label, .lbl { font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+input, select {
+  width: 100%; min-height: 48px; padding: 10px 12px; font: inherit; color: var(--fg);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seg button { min-height: 48px; }
+button {
+  font: inherit; font-weight: 600; cursor: pointer; min-height: 52px; padding: 12px 18px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+}
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+button:disabled { opacity: .45; cursor: default; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.timer { font-variant-numeric: tabular-nums; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--accent-soft); }
+.timer.low { background: var(--bad-soft); color: var(--bad); }
+.meta { font-size: .85rem; color: var(--muted); }
+.bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+.q { font-size: 1.1rem; font-weight: 600; line-height: 1.45; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt { text-align: left; display: flex; gap: 12px; align-items: flex-start; font-weight: 500; line-height: 1.4; }
+.opt b { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); font-size: .85rem; }
+.opt.sel { background: var(--accent-soft); border-color: var(--accent); }
+.opt.sel b { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.score { text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.score .big { font-size: 3.2rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.stats div { border: 1px solid var(--line); border-radius: 10px; padding: 10px 4px; }
+.stats strong { display: block; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.stats span { font-size: .75rem; color: var(--muted); }
+.rv { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.rv.ok { border-left: 5px solid var(--good); }
+.rv.no { border-left: 5px solid var(--bad); }
+.rv .ans { font-size: .92rem; padding: 6px 10px; border-radius: 8px; }
+.rv .ans.g { background: var(--good-soft); }
+.rv .ans.b { background: var(--bad-soft); }
+.warnbox { background: var(--bad-soft); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+/* Brand banner: orchid gradient that drifts, a light shine sweeping across, round stickers that pop in then float, wiggle or twinkle */
+.brand { position: relative; overflow: hidden; border-radius: 18px; padding: 24px 54px 20px; text-align: center; color: #3b1a4d;
+  background: linear-gradient(120deg, #f7d5f4, #ebc3f3, #d9b5f8, #f4bfe6, #fcd8ef, #f7d5f4); background-size: 300% 300%;
+  animation: drift 12s ease-in-out infinite; }
+.brand::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-18deg); animation: sweep 5.5s ease-in-out 1s infinite; }
+.brand .name { position: relative; z-index: 1; font-size: 1.9rem; font-weight: 700; line-height: 1.15; display: flex; justify-content: center; flex-wrap: wrap; gap: 0 .35em; }
+.brand .name span { display: inline-block; opacity: 0; animation: rise .7s ease-out forwards; }
+.brand .name span:nth-child(1) { color: #a1209b; animation-delay: .05s; }
+.brand .name span:nth-child(2) { color: #6a2fbf; animation-delay: .25s; }
+.brand .name span:nth-child(3) { color: #c0176f; animation-delay: .45s; }
+.brand .tag { position: relative; z-index: 1; margin-top: 6px; font-size: .8rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #5a3a70; opacity: 0; animation: rise .7s ease-out .75s forwards; }
+.brand i { position: absolute; border-radius: 50%; background: rgba(255,255,255,.55); animation: floaty 6s ease-in-out infinite; }
+.brand i:nth-of-type(1) { width: 60px; height: 60px; left: 30%; top: -34px; }
+.brand i:nth-of-type(2) { width: 34px; height: 34px; right: 28%; bottom: -14px; animation-delay: -3s; }
+.stk { position: absolute; z-index: 1; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; line-height: 1;
+  background: rgba(255,255,255,.8); box-shadow: 0 2px 6px rgba(120,40,140,.28);
+  animation: pop .6s cubic-bezier(.3,1.6,.5,1) both, var(--mv) 4s ease-in-out .8s infinite; }
+.stk.l { left: 9px; } .stk.r { right: 9px; }
+.stk.a { top: 7%; } .stk.b { top: 38%; } .stk.c { top: 69%; }
+.stk:nth-of-type(1) { --mv: floaty; animation-delay: .2s, .8s; }
+.stk:nth-of-type(2) { --mv: wiggle; animation-delay: .35s, 1s; }
+.stk:nth-of-type(3) { --mv: floaty; animation-delay: .5s, 1.2s; }
+.stk:nth-of-type(4) { --mv: twinkle; animation-delay: .3s, .9s; }
+.stk:nth-of-type(5) { --mv: floaty; animation-delay: .45s, 1.5s; }
+.stk:nth-of-type(6) { --mv: wiggle; animation-delay: .6s, 1.1s; }
+@keyframes drift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes wiggle { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
+@keyframes twinkle { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.18) rotate(14deg); } }
+@keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes sweep { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+@media (prefers-reduced-motion: reduce) {
+  .brand, .brand i, .brand::after, .stk { animation: none; }
+  .brand .name span, .brand .tag { animation: none; opacity: 1; }
+}
+textarea { width: 100%; padding: 10px 12px; font: inherit; font-size: .9rem; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; resize: none; }
+.btn { display: grid; place-items: center; min-height: 52px; padding: 12px 18px; border-radius: 12px; text-decoration: none; font-weight: 600; text-align: center; background: var(--accent); color: var(--accent-fg); }
+</style>
+
+<div class="wrap">
+
+  <header class="brand">
+    <i></i><i></i>
+    <span class="stk l a" aria-hidden="true">🌸</span>
+    <span class="stk l b" aria-hidden="true">🔬</span>
+    <span class="stk l c" aria-hidden="true">📚</span>
+    <span class="stk r a" aria-hidden="true">⭐</span>
+    <span class="stk r b" aria-hidden="true">🧪</span>
+    <span class="stk r c" aria-hidden="true">🧬</span>
+    <div class="name"><span>Deva</span><span>Study</span><span>Classes</span></div>
+    <p class="tag">Science Practice Test</p>
+  </header>
+
+  <!-- Screen 1: setup -->
+  <section id="s-setup" class="card">
+    <h1 id="t-title">Science Test</h1>
+    <p class="muted" id="t-intro">Test shuru karne se pehle details bharein.</p>
+    <div><label for="f-name" id="l-name">Naam</label><input id="f-name" type="text" autocomplete="name" placeholder="Student ka naam"></div>
+    <div>
+      <label for="f-subject" id="l-subject">Subject</label>
+      <select id="f-subject">
+        <option value="Physics">Physics (भौतिक विज्ञान)</option>
+        <option value="Chemistry">Chemistry (रसायन विज्ञान)</option>
+        <option value="Biology" selected>Biology (जीव विज्ञान)</option>
+        <option value="General Science">General Science (सामान्य विज्ञान)</option>
+      </select>
+    </div>
+    <div><label for="f-chapter" id="l-chapter">Chapter ka naam ya number</label><input id="f-chapter" type="text" value="Chapter 5: जैव प्रक्रम" placeholder="Chapter 1 / प्रकाश"></div>
+    <div>
+      <label for="f-time" id="l-time">Test ka samay</label>
+      <select id="f-time">
+        <option value="10">10 min</option><option value="20">20 min</option>
+        <option value="30">30 min</option><option value="40">40 min</option>
+        <option value="60" selected>60 min</option><option value="0">No timer</option>
+      </select>
+    </div>
+    <div>
+      <span class="lbl" id="l-lang">Bhasha</span>
+      <div class="seg" role="group" aria-label="Language">
+        <button type="button" id="b-hi" class="on">हिन्दी</button>
+        <button type="button" id="b-en">English</button>
+      </div>
+    </div>
+    <button type="button" id="b-start" class="primary">Test shuru karein</button>
+    <p class="meta" id="t-count"></p>
+  </section>
+
+  <!-- Screen 2: quiz -->
+  <section id="s-quiz" hidden class="wrap" style="gap:14px">
+    <div class="top"><span class="meta" id="q-info"></span><span class="timer" id="q-timer">00:00</span></div>
+    <div class="bar"><i id="q-bar"></i></div>
+    <div class="card">
+      <p class="meta" id="q-num"></p>
+      <p class="q" id="q-text"></p>
+      <div class="opts" id="q-opts"></div>
+    </div>
+    <div class="nav">
+      <button type="button" id="b-prev">Pichhla</button>
+      <button type="button" id="b-next" class="primary">Agla</button>
+    </div>
+    <div class="warnbox" id="q-warn" hidden>
+      <p id="q-warn-text"></p>
+      <div class="nav">
+        <button type="button" id="b-back">Wapas</button>
+        <button type="button" id="b-confirm" class="primary">Submit</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 3: result -->
+  <section id="s-result" hidden class="wrap">
+    <div class="card score">
+      <p class="meta" id="r-who"></p>
+      <div class="big" id="r-score"></div>
+      <p id="r-pct" style="font-weight:600"></p>
+      <p class="meta" id="r-sub"></p>
+      <div class="stats">
+        <div><strong id="r-c" style="color:var(--good)">0</strong><span id="r-cl"></span></div>
+        <div><strong id="r-w" style="color:var(--bad)">0</strong><span id="r-wl"></span></div>
+        <div><strong id="r-s">0</strong><span id="r-sl"></span></div>
+      </div>
+    </div>
+    <div class="card" id="r-send">
+      <p id="r-send-t" style="font-weight:600"></p>
+      <textarea id="r-msg" readonly rows="5" aria-label="Result"></textarea>
+      <div class="nav">
+        <a id="r-wa" class="btn" href="#" target="_blank" rel="noopener"></a>
+        <button type="button" id="r-copy"></button>
+      </div>
+    </div>
+    <h2 id="r-rev"></h2>
+    <div class="wrap" id="r-list" style="gap:12px"></div>
+    <button type="button" id="b-again" class="primary"></button>
+  </section>
+</div>
+
+<script>
+/* ============ QUESTIONS ============
+   Har question ka format:
+   { q:"question", o:["A","B","C","D"], a:1 }
+   a = sahi option ka number (0 = pehla, 1 = doosra, 2 = teesra, 3 = chautha)
+   English version chahiye to qe:"..." aur oe:[...] bhi jodein. Na ho to Hindi dikhegi.
+*/
+var QUESTIONS = [
+  { q:"प्रकाश संश्लेषण क्रिया में ऑक्सीजन गैस निकलती है", o:["कार्बन डाइऑक्साइड से","जल से","वायु से","पर्ण हरित के विघटन से"], a:1 },
+  { q:"प्रकाश अभिक्रिया होती है।", o:["माइटोकॉण्ड्रिया में","हरित लवक के ग्रेना में","राइबोसोम में","हरित लवक के स्ट्रोमा में"], a:3 },
+  { q:"क्लोरोप्लास्ट के ग्रेना में बनते हैं", o:["ATP तथा NAD. 2H","ATP तथा ग्लूकोस","ATP तथा NADP2H","उपर्युक्त सभी"], a:2 },
+  { q:"क्लोरोफिल अवशोषित करता है", o:["जल","खनिज लवण","प्रकाश ऊर्जा","ऑक्सीजन"], a:2 },
+  { q:"हरितलवक के स्ट्रोमा में कौन-सी क्रिया होती है?", o:["प्रकाशीय अभिक्रिया","अप्रकाशीय अभिक्रिया","(a) और (b) दोनों अभिक्रियाएँ","उपरोक्त में से कोई नहीं"], a:1 },
+  { q:"पादपों में वायु प्रदूषण कम करने वाली प्रक्रिया", o:["श्वसन","प्रकाश-संश्लेषण","वाष्पोत्सर्जन","प्रोटीन संश्लेषण"], a:1 },
+  { q:"पायरुवेट के विखंडन से यह कार्बन डाइऑक्साइड, जल तथा ऊर्जा देता है और यह क्रिया होती है।", o:["कोशिकाद्रव्य में","माइटोकॉण्ड्रिया में","हरित लवक में","केन्द्रक में"], a:1 },
+  { q:"स्वपोषी पोषण के लिए आवश्यक है।", o:["कार्बन डाइऑक्साइड तथा जल","क्लोरोफिल","सूर्य का प्रकाश","उपर्युक्त सभी"], a:3 },
+  { q:"निम्नलिखित में से कौन विषमपोषी नहीं है?", o:["फफूँदी","फीताकृमि","यीस्ट","मनी प्लांट"], a:3 },
+  { q:"आहारनाल की C के आकार की संरचना है।", o:["आमाशय","ग्रहणी","प्रसनी","कृमिरूप परिशेषिका"], a:1 },
+  { q:"मनुष्य में ग्रासनली की लम्बाई होती है", o:["5.8 सेमी","25-30 सेमी","1.5 मीटर","15 फीट"], a:1 },
+  { q:"मनुष्यों में लार ग्रन्थियों की संख्या होती है", o:["दो जोड़ी","तीन जोड़ी","चार जोड़ी","पाँच जोड़ी"], a:1 },
+  { q:"कृमिरूप परिशेषिका .......... का भाग है।", o:["छोटी आँत","अग्न्याशय","बड़ी आँत (कोलन)","ग्रासनली"], a:2 },
+  { q:"मनुष्य में दूध के दाँतों की संख्या कितनी होती है?", o:["20","24","28","32"], a:0 },
+  { q:"मनुष्य के प्रत्येक जबड़े में चर्वणक दन्तों की संख्या होती है।", o:["2","4","6","8"], a:2 },
+  { q:"ग्रासनली द्वार पर लटकी हुई पत्ती के समान कार्टिलेज रचना कहलाती है।", o:["एपीफैरेक्स","एपीग्लोटिस","एल्विओलाई","श्लेष्मावरण"], a:1 },
+  { q:"यकृत स्रावित करता है।", o:["लार","जठररस","पित्त रस","अग्न्याशयिक रस"], a:2 },
+  { q:"आहारनाल के पेशीय संकुचन को कहते हैं", o:["पाचन","क्रमाकुंचन","परिसंचरण","अवशोषण"], a:1 },
+  { q:"जठर रस स्रावित होता है", o:["अग्न्याशय","छोटी आँत","आमाशय","बड़ी आँत"], a:2 },
+  { q:"ट्रिप्सिन एंजाइम क्रिया करता है", o:["प्रोटीन पर","स्टार्च पर","वसा पर","लवणों पर"], a:0 },
+  { q:"निम्न में से विटामिन्स का कौन-सा जोड़ा जल में घुलनशील है?", o:["विटामिन A तथा B","विटामिन B तथा C","विटामिन C तथा K","विटामिन D तथा B"], a:1 },
+  { q:"विटामिन 'C' का अच्छा स्रोत है", o:["अण्डा","मछली","गेहूँ","संतरा"], a:3 },
+  { q:"बेरी-बेरी रोग किस विटामिन की कमी से होता है?", o:["विटामिन B1","विटामिन B2","विटामिन B3","विटामिन B5"], a:0 },
+  { q:"निम्नलिखित में से मनुष्य की लार में पाया जाता है", o:["टायलिन","लाइसोजाइम","पेप्सिन","टायलिन व लाइसोजाइम दोनों"], a:0 },
+  { q:"हीमोग्लोबिन महत्त्वपूर्ण भूमिका निभाता है", o:["उत्सर्जन में","श्वसन में","पाचन में","वृद्धि में"], a:1 },
+  { q:"ऊर्जा की मुद्रा है", o:["डी०एन०ए०","आर०एन०ए०","ए०टी०पी०","क्लोरोफिल"], a:2 },
+  { q:"ग्लाइकोलाइसिस की प्रक्रिया सम्पन्न होती है", o:["कोशिका द्रव्य में","राइबोसोम में","माइटोकॉण्ड्रिया में","अन्तः प्रद्रव्यी जालिका में"], a:0 },
+  { q:"ग्लाइकोजेनेसिस क्रिया में बनता है", o:["ग्लूकोज","ग्लाइकोजन","विटामिन्स","प्रोटीन्स"], a:0 },
+  { q:"ग्लाइकोलाइसिस के अंत में कितने ATP अणुओं का लाभ होता है?", o:["दो","शून्य","चार","आठ"], a:0 },
+  { q:"मानव हृदय में कक्षों (वेश्म) की संख्या होती है।", o:["एक","दो","तीन","चार"], a:3 },
+  { q:"पल्मोनरी (फुफ्फुस) शिरा खुलती है या रुधिर लाती है", o:["दाहिने अलिन्द में","बायें अलिन्द में","बायें निलय में","दाहिने निलय में"], a:1 },
+  { q:"प्रकाश संश्लेषण के दौरान निम्न में से कौन-सी एक क्रिया नहीं होती है?", o:["क्लोरोफिल द्वारा प्रकाश ऊर्जा को अवशोषित करना","प्रकाश ऊर्जा को रासायनिक ऊर्जा में परिवर्तित करना","कार्बन डाइऑक्साइड का कार्बोहाइड्रेट में अपचयन","ग्लूकोज का पाइरुविक अम्ल में विखण्डन"], a:3 },
+  { q:"शुद्ध रुधिर को शरीर के विभिन्न भागों में ले जाती है", o:["शिराएँ","महाशिरा","दायाँ निलय","महाधमनी"], a:3 },
+  { q:"वह कौन-सी शिरा है जिसमें शुद्ध रुधिर प्रवाहित होता है?", o:["पल्मोनरी","ग्रीवा","पोर्टल शिरा","पश्च महाशिरा"], a:0 },
+  { q:"निम्नलिखित में कौन-सा जोड़ा प्रकाश संश्लेषण की अभिक्रिया में प्रयोग किया जाता है?", o:["कार्बन डाइऑक्साइड एवं ऑक्सीजन","जल एवं ऑक्सीजन","जल एवं कार्बन डाइऑक्साइड","कार्बन डाइऑक्साइड एवं नाइट्रोजन"], a:2 },
+  { q:"रक्त का लाल रंग किस पदार्थ की उपस्थिति के कारण होता है?", o:["हीमोग्लोबिन","न्यूक्लिक अम्ल","विटामिन C","पोटैशियम"], a:0 },
+  { q:"लसीका में नहीं पायी जाती है", o:["लाल रूधिर कणिकाएँ","लिम्फोसाइट्स","श्वेत रुधिराणु","उत्सर्जी पदार्थ"], a:0 },
+  { q:"पौधों में पत्तियों तक जल एवं खनिज लवण किसके द्वारा स्थानान्तरित होते हैं?", o:["फ्लोएम द्वारा","जाइलम द्वारा","मज्जा से","रन्ध्र से"], a:1 },
+  { q:"पादप में जाइलम उत्तरदायी है।", o:["जल का वहन","भोजन का वहन","अमीनो अम्ल का वहन","ऑक्सीजन का वहन"], a:0 },
+  { q:"फ्लोएम द्वारा भोजन का स्थानान्तरण होता है", o:["सुक्रोज के रूप में","प्रोटीन के रूप में","हॉर्मोन्स के रूप में","वसा के रूप में"], a:0 },
+  { q:"पौधों में भोजन का स्थानान्तरण होता है", o:["जाइलम द्वारा","फ्लोएम द्वारा","कॉर्टेक्स द्वारा","मज्जा द्वारा"], a:1 },
+  { q:"डिक्सन एवं जौली सम्बन्धित है", o:["रसारोहण से","परासरण से","अवशोषण से","विसरण से"], a:0 },
+  { q:"निम्नलिखित में से कौन-सा त्वचा का कार्य नहीं है?", o:["संवेदना","सुरक्षा","लैंगिक लक्षण","उत्सर्जन"], a:2 },
+  { q:"मनुष्य में दुग्ध ग्रन्थि (स्तन ग्रन्थि) रूपान्तरित रचना है", o:["स्वेद ग्रन्थि की","तेल ग्रन्थि की","लार ग्रन्थि की","जठर ग्रन्थि की"], a:1 },
+  { q:"अमोनिया का यूरिया में परिवर्तन करता है।", o:["अग्न्याशय","यकृत","आमाशय","वृक्क"], a:1 },
+  { q:"मनुष्य में वृक्क एक तंत्र का भाग है जो सम्बन्धित है", o:["पोषण से","श्वसन से","उत्सर्जन से","परिवहन से"], a:2 },
+  { q:"बोमेन - सम्पुट भाग है", o:["पित्तवाहिनी का","अग्न्याशय वाहिनी का","प्रोस्टेट ग्रन्थि का","वृक्क नलिका का"], a:3 },
+  { q:"गर्मियों के दिनों में किस कारण दोपहर में पौधे मुरझा जाते हैं?", o:["वाष्पोत्सर्जन की कमी के कारण","वाष्पोत्सर्जन की अधिकता के कारण","प्रकाश संश्लेषण की कमी के कारण","प्रकाश-संश्लेषण की अधिकता के कारण"], a:1 },
+  { q:"कूपिका (वायु कोष्ठिका) पायी जाती है-", o:["यकृत में","फेफड़ों में","आमाशय में","जीभ में"], a:1 },
+  { q:"कोशिकीय प्रक्रमों में ऊर्जा मुद्रा है।", o:["माइटोकॉण्ड्रिया","एटीपी०","ग्लूकोज","पायरुवेट"], a:1 },
+  { q:"वह प्रक्रियाएँ जिसमें जटिल कार्बनिक अणु सरल अणुओं में टूटते हैं", o:["उपचयी अभिक्रियाएँ","अपचयी अभिक्रियाएँ","(a) तथा (b) दोनों","सामान्य अभिक्रियाएँ"], a:1 },
+  { q:"पित्तरस का स्राव होता है", o:["पित्ताशय में","यकृत में","अग्न्याशय में","आमाशय में"], a:1 },
+  { q:"केवल जल में घुलनशील होता है।", o:["विटामिन A","विटामिन D","विटामिन K","विटामिन C"], a:3 },
+  { q:"चर्मदाह या पैलाग्रा रोग निम्नलिखित में से किस विटामिन की कमी से होता है?", o:["विटामिन B1","विटामिन B2","विटामिन B5","विटामिन B12"], a:2 },
+  { q:"ATP तथा NADP. 2H का निर्माण होता है", o:["माइटोकॉण्ड्रिया में","क्लोरोप्लास्ट में","पेरॉक्सीसोम्स में","लायसोसोम्स में"], a:1 },
+  { q:"केवल न्यूक्लिक अम्ल तथा प्रोटीन्स के बने होते हैं", o:["जीवाणु","क्लोरोप्लास्ट","विषाणु","प्रायन्स"], a:2 },
+  { q:"द्वार कोशिकायें पायी जाती हैं", o:["जड़ों में","रन्ध्रों में","वात रन्ध्रों में","इन सभी में"], a:1 },
+  { q:"मूत्र निर्माण होता है", o:["वृक्क में","यकृत में","प्लीहा में","हृदय में"], a:0 },
+  { q:"लार में कौन-सा एन्जाइम पाया जाता है?", o:["पेप्सिन","एमिलेस","ट्रिप्सिन","लाइपेस"], a:1 },
+  { q:"प्रकाश संश्लेषण प्रक्रम के दौरान क्या नहीं संश्लेषित होता है?", o:["ऑक्सीजन","CO₂","जल","ग्लूकोज़"], a:1 },
+  { q:"किण्वन के बारे में निम्न में से कौन-सा कथन सत्य नहीं है?", o:["यह ऑक्सीजन की अनुपस्थिति में होता है","यह प्रक्रम सामान्यतः यीस्ट में होता है","इस क्रिया में पाइरुविक अम्ल CO₂ व इथेनॉल में परिवर्तित होता है।","यह क्रिया माइटोकॉण्ड्रिया में सम्पन्न होती है"], a:3 },
+  { q:"वह जैव प्रक्रम जिसके द्वारा हानिकारक पदार्थों का निष्कासन शरीर से होता है, है:", o:["जनन","उत्सर्जन","पाचन","परिसंचरण"], a:1 }
+];
+
+/* ============ TEXT ============ */
+var UI = {
+  hi: { title:"विज्ञान टेस्ट", intro:"टेस्ट शुरू करने से पहले जानकारी भरें।", name:"नाम", namePh:"विद्यार्थी का नाम", subject:"विषय", chapter:"अध्याय का नाम या नंबर",
+        time:"टेस्ट का समय", lang:"भाषा", start:"टेस्ट शुरू करें", count:"कुल प्रश्न: ", min:" मिनट", noTimer:"समय सीमा नहीं",
+        prev:"पिछला", next:"अगला", submit:"सबमिट करें", qn:"प्रश्न ", of:" / ", answered:"उत्तर दिए: ",
+        warn:"आपने कुछ प्रश्न छोड़े हैं। क्या फिर भी सबमिट करना है? छोड़े गए प्रश्न: ", warnOk:"क्या आप सबमिट करना चाहते हैं?", back:"वापस", yes:"सबमिट",
+        score:"आपका स्कोर", correct:"सही", wrong:"गलत", skipped:"छोड़े", review:"उत्तरों की समीक्षा", yours:"आपका उत्तर: ", right:"सही उत्तर: ",
+        none:"कोई उत्तर नहीं", again:"दोबारा टेस्ट दें", sendT:"अपना रिज़ल्ट टीचर को भेजें", wa:"WhatsApp पर भेजें", copy:"कॉपी करें", copied:"कॉपी हो गया", mName:"नाम", mSub:"विषय", mChap:"अध्याय", mScore:"स्कोर", timeUp:"समय समाप्त", great:"बहुत बढ़िया!", good:"अच्छा प्रयास, और अभ्यास करें।", low:"और मेहनत की जरूरत है। समीक्षा देखें।" },
+  en: { title:"Science Test", intro:"Fill in the details before you start.", name:"Name", namePh:"Student name", subject:"Subject", chapter:"Chapter name or number",
+        time:"Test time", lang:"Language", start:"Start test", count:"Total questions: ", min:" min", noTimer:"No timer",
+        prev:"Previous", next:"Next", submit:"Submit", qn:"Question ", of:" of ", answered:"Answered: ",
+        warn:"You have skipped some questions. Submit anyway? Skipped: ", warnOk:"Do you want to submit now?", back:"Go back", yes:"Submit",
+        score:"Your score", correct:"Correct", wrong:"Wrong", skipped:"Skipped", review:"Answer review", yours:"Your answer: ", right:"Correct answer: ",
+        none:"Not answered", again:"Take the test again", sendT:"Send your result to your teacher", wa:"Send on WhatsApp", copy:"Copy", copied:"Copied", mName:"Name", mSub:"Subject", mChap:"Chapter", mScore:"Score", timeUp:"Time is up", great:"Excellent work!", good:"Good effort. Keep practising.", low:"Needs more practice. Check the review below." }
+};
+/* Teacher ka WhatsApp number country code ke saath, bina + ya space ke. Example: "919876543210". Khali chhodne par student khud contact chunega. */
+var TEACHER_WA = "";
+var lastMsg = "";
+var lang = "hi", answers = [], cur = 0, left = 0, tick = null, cfg = {};
+var $ = function (id) { return document.getElementById(id); };
+function qt(q) { return (lang === "en" && q.qe) ? q.qe : q.q; }
+function qo(q) { return (lang === "en" && q.oe) ? q.oe : q.o; }
+function show(id) { ["s-setup", "s-quiz", "s-result"].forEach(function (s) { $(s).hidden = (s !== id); }); window.scrollTo(0, 0); }
+
+function applySetupText() {
+  var t = UI[lang];
+  document.documentElement.lang = lang;
+  $("t-title").textContent = t.title; $("t-intro").textContent = t.intro;
+  $("l-name").textContent = t.name; $("f-name").placeholder = t.namePh;
+  $("l-subject").textContent = t.subject; $("l-chapter").textContent = t.chapter;
+  $("l-time").textContent = t.time; $("l-lang").textContent = t.lang;
+  $("b-start").textContent = t.start; $("t-count").textContent = t.count + QUESTIONS.length;
+  var opts = $("f-time").options;
+  for (var i = 0; i < opts.length; i++) opts[i].textContent = opts[i].value === "0" ? t.noTimer : opts[i].value + t.min;
+  $("b-hi").className = lang === "hi" ? "on" : ""; $("b-en").className = lang === "en" ? "on" : "";
+}
+$("b-hi").onclick = function () { lang = "hi"; applySetupText(); };
+$("b-en").onclick = function () { lang = "en"; applySetupText(); };
+
+function fmt(sec) { var m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
+
+$("b-start").onclick = function () {
+  cfg = { name: $("f-name").value.trim(), subject: $("f-subject").value, chapter: $("f-chapter").value.trim(), mins: parseInt($("f-time").value, 10) };
+  answers = QUESTIONS.map(function () { return -1; }); cur = 0;
+  $("q-info").textContent = cfg.subject + (cfg.chapter ? " · " + cfg.chapter : "");
+  clearInterval(tick);
+  if (cfg.mins > 0) {
+    left = cfg.mins * 60; $("q-timer").hidden = false; $("q-timer").textContent = fmt(left); $("q-timer").className = "timer";
+    tick = setInterval(function () {
+      left--; $("q-timer").textContent = fmt(Math.max(left, 0));
+      if (left <= 60) $("q-timer").className = "timer low";
+      if (left <= 0) { finish(true); }
+    }, 1000);
+  } else { $("q-timer").hidden = true; }
+  show("s-quiz"); render();
+};
+
+function render() {
+  var t = UI[lang], q = QUESTIONS[cur], n = QUESTIONS.length;
+  $("q-num").textContent = t.qn + (cur + 1) + t.of + n + "  ·  " + t.answered + answers.filter(function (x) { return x >= 0; }).length;
+  $("q-text").textContent = qt(q);
+  $("q-bar").style.width = ((cur + 1) / n * 100) + "%";
+  var box = $("q-opts"); box.innerHTML = "";
+  qo(q).forEach(function (txt, i) {
+    var b = document.createElement("button"); b.type = "button";
+    b.className = "opt" + (answers[cur] === i ? " sel" : "");
+    var l = document.createElement("b"); l.textContent = "ABCD".charAt(i);
+    var s = document.createElement("span"); s.textContent = txt;
+    b.appendChild(l); b.appendChild(s);
+    b.onclick = function () { answers[cur] = i; render(); };
+    box.appendChild(b);
+  });
+  $("b-prev").textContent = t.prev; $("b-prev").disabled = cur === 0;
+  $("b-next").textContent = cur === n - 1 ? t.submit : t.next;
+  $("q-warn").hidden = true;
+}
+$("b-prev").onclick = function () { if (cur > 0) { cur--; render(); } };
+$("b-next").onclick = function () {
+  if (cur < QUESTIONS.length - 1) { cur++; render(); return; }
+  var t = UI[lang], skipped = [];
+  answers.forEach(function (a, i) { if (a < 0) skipped.push(i + 1); });
+  $("q-warn-text").textContent = skipped.length ? t.warn + skipped.join(", ") : t.warnOk;
+  $("b-back").textContent = t.back; $("b-confirm").textContent = t.yes;
+  $("q-warn").hidden = false;
+};
+$("b-back").onclick = function () { $("q-warn").hidden = true; };
+$("b-confirm").onclick = function () { finish(false); };
+
+function finish(timeUp) {
+  clearInterval(tick);
+  var t = UI[lang], n = QUESTIONS.length, c = 0, w = 0, s = 0;
+  answers.forEach(function (a, i) { if (a < 0) s++; else if (a === QUESTIONS[i].a) c++; else w++; });
+  var pct = Math.round(c / n * 100);
+  $("r-who").textContent = (cfg.name ? cfg.name + " · " : "") + cfg.subject + (cfg.chapter ? " · " + cfg.chapter : "") + (timeUp ? " · " + t.timeUp : "");
+  $("r-score").textContent = c + " / " + n;
+  $("r-pct").textContent = pct + "%";
+  $("r-sub").textContent = pct >= 80 ? t.great : pct >= 50 ? t.good : t.low;
+  $("r-c").textContent = c; $("r-w").textContent = w; $("r-s").textContent = s;
+  $("r-cl").textContent = t.correct; $("r-wl").textContent = t.wrong; $("r-sl").textContent = t.skipped;
+  $("r-rev").textContent = t.review; $("b-again").textContent = t.again;
+  var list = $("r-list"); list.innerHTML = "";
+  QUESTIONS.forEach(function (q, i) {
+    var a = answers[i], ok = a === q.a;
+    var d = document.createElement("div"); d.className = "rv " + (ok ? "ok" : "no");
+    var h = document.createElement("p"); h.className = "q"; h.textContent = (i + 1) + ". " + qt(q);
+    var y = document.createElement("p"); y.className = "ans " + (ok ? "g" : "b");
+    y.textContent = t.yours + (a < 0 ? t.none : qo(q)[a]);
+    d.appendChild(h); d.appendChild(y);
+    if (!ok) { var r = document.createElement("p"); r.className = "ans g"; r.textContent = t.right + qo(q)[q.a]; d.appendChild(r); }
+    list.appendChild(d);
+  });
+  lastMsg = "Deva Study Classes\n" + t.mName + ": " + (cfg.name || "-") + "\n" + t.mSub + ": " + cfg.subject + "\n" + t.mChap + ": " + (cfg.chapter || "-") + "\n" + t.mScore + ": " + c + " / " + n + " (" + pct + "%)\n" + t.correct + ": " + c + ", " + t.wrong + ": " + w + ", " + t.skipped + ": " + s;
+  $("r-send-t").textContent = t.sendT; $("r-msg").value = lastMsg;
+  $("r-wa").textContent = t.wa; $("r-copy").textContent = t.copy;
+  $("r-wa").href = "https://wa.me/" + TEACHER_WA + "?text=" + encodeURIComponent(lastMsg);
+  show("s-result");
+}
+$("r-copy").onclick = function () {
+  var t = UI[lang], box = $("r-msg");
+  function fallback() { box.focus(); box.select(); }
+  try {
+    navigator.clipboard.writeText(lastMsg).then(function () { $("r-copy").textContent = t.copied; }, fallback);
+  } catch (e) { fallback(); }
+};
+$("b-again").onclick = function () { applySetupText(); show("s-setup"); };
+
+applySetupText();
+</script>
